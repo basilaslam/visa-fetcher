@@ -169,55 +169,60 @@ async function convertPdfToTiffAndSave(pdf, pdfOutPath) {
 
 
 const getInsurance = async (page, visaId, pdfOutPath, browser) => {    
+   try {
     const client = await page.createCDPSession();
 
-  await client.send('Fetch.enable', {
-    patterns: [
-      {
-        urlPattern: '*',
-        requestStage: 'Response',
-      },
-    ],
-  });
-
-  await client.on('Fetch.requestPaused', async (reqEvent) => {
-    const { requestId } = reqEvent;
-
-    let responseHeaders = reqEvent.responseHeaders || [];
-    let contentType = '';
-
-    for (let elements of responseHeaders) {
-      if (elements.name.toLowerCase() === 'content-type') {
-        contentType = elements.value;
+    await client.send('Fetch.enable', {
+      patterns: [
+        {
+          urlPattern: '*',
+          requestStage: 'Response',
+        },
+      ],
+    });
+  
+    await client.on('Fetch.requestPaused', async (reqEvent) => {
+      const { requestId } = reqEvent;
+  
+      let responseHeaders = reqEvent.responseHeaders || [];
+      let contentType = '';
+  
+      for (let elements of responseHeaders) {
+        if (elements.name.toLowerCase() === 'content-type') {
+          contentType = elements.value;
+        }
       }
-    }
-
-    if (contentType.endsWith('pdf')) {
-
-      responseHeaders.push({
-        name: 'content-disposition',
-        value: 'attachment',
-      });
-
-      const responseObj = await client.send('Fetch.getResponseBody', {
-        requestId,
-      });
-
-      await convertPdfToTiffAndSave(responseObj.body, pdfOutPath)
-
-      await client.send('Fetch.fulfillRequest', {
-        requestId,
-        responseCode: 200,
-        responseHeaders,
-        body: responseObj.body,
-      });
-    } else {
-      await client.send('Fetch.continueRequest', { requestId });
-    }
-  });
-    const url = `https://princessbooking.com/?_=403&s=vs.insurance&vs=${visaId}&_p_st=-2`
-    await page.goto(url)
-    await page.close()
+  
+      if (contentType.endsWith('pdf')) {
+  
+        responseHeaders.push({
+          name: 'content-disposition',
+          value: 'attachment',
+        });
+  
+        const responseObj = await client.send('Fetch.getResponseBody', {
+          requestId,
+        });
+  
+        await convertPdfToTiffAndSave(responseObj.body, pdfOutPath)
+  
+        await client.send('Fetch.fulfillRequest', {
+          requestId,
+          responseCode: 200,
+          responseHeaders,
+          body: responseObj.body,
+        });
+      } else {
+        await client.send('Fetch.continueRequest', { requestId });
+      }
+    });
+      const url = `https://princessbooking.com/?_=403&s=vs.insurance&vs=${visaId}&_p_st=-2`
+      await page.goto(url)
+      await page.close()
+   } catch (error) {
+    console.log(error);
+  await page.close() 
+  }
 }
 
 const loginToServer = async () => {
