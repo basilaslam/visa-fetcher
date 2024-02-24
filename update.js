@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import path, { basename } from 'path';
 import { config } from "dotenv";
 import FormData from "form-data";
-import { Page } from "puppeteer";
+import { Page } from "puppeteer-core";
 import {fromBase64} from "pdf2pic"
 config();
 

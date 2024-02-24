@@ -1,12 +1,19 @@
-import puppeteer, { Browser, Page } from "puppeteer"
+import puppeteer from "puppeteer-core"
 import { updateVisa } from "./update.js";
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import chromium from "@sparticuz/chromium";
 import { config } from "dotenv";
 config();
 
+
 async function automate(visaId, applicationNo) {
-  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  });
  try {
   console.log('step-1');
   await updateVisa(browser, visaId, applicationNo)
@@ -46,6 +53,7 @@ const app = new Hono()
 
 
 app.post('/', async (c) =>{
+  console.log(await chromium.executablePath());
     const { visaId, applicationNo } = await c.req.json()
     
 await automate(visaId, applicationNo)
