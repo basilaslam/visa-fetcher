@@ -48,6 +48,14 @@ await automate(visaId, applicationNo)
 
 })
 
+
+app.get('/', async (c) =>{
+ 
+  
+return c.text('this is visa fetcher')
+
+})
+
 serve({
   fetch: app.fetch,
   port: process.env.PORT
