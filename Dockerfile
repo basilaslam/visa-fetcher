@@ -12,13 +12,11 @@ RUN apt-get update && \
     libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 \
     ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libgbm1
 
-
-    # Install GraphicsMagick
+# Install GraphicsMagick
 RUN apt-get install -y graphicsmagick
 
 # Install Ghostscript
 RUN apt-get install -y ghostscript
-
 
 # Copy the Times New Roman font file to the fonts directory in the Docker image
 COPY fonts/times.ttf /usr/share/fonts/
@@ -35,8 +33,11 @@ RUN npm install --production
 # Copy the rest of the project files to the working directory
 COPY . .
 
+# Install PM2 globally
+RUN npm install pm2 -g
+
 # Expose the port your application listens on
 EXPOSE 8080
 
-# Start the application
-CMD ["node", "index.js"]
+# Start the application with PM2
+CMD ["pm2-runtime", "index.js"]
