@@ -218,10 +218,6 @@ const getInsurance = async (page, visaId, pdfOutPath, browser) => {
     const url = `https://princessbooking.com/?_=403&s=vs.insurance&vs=${visaId}&_p_st=-2`
     await page.goto(url)
     await page.close()
-    await browser.close()
-
-
-
 }
 
 const loginToServer = async () => {
@@ -321,7 +317,6 @@ export const updateVisa = async (browser, visaId, applicationNo) => {
   removeFile(visaPdfOutPath);
   removeFile(`${insurancePdfOutPath}.1.jpeg`);
   console.log('Removed temporary PDF files.');
-
   console.log('updateVisa process completed.');
   return {
     status: "done"

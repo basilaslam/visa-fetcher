@@ -6,10 +6,18 @@ import { config } from "dotenv";
 config();
 
 async function automate(visaId, applicationNo) {
-  console.log('step-1');
   const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-  console.log('step-2');
-  return await updateVisa(browser, visaId, applicationNo)
+ try {
+  console.log('step-1');
+  await updateVisa(browser, visaId, applicationNo)
+  await browser.close()
+  console.log('Browser closed.');
+
+ } catch (error) {
+  await browser.close()
+  console.log('Browser closed.');
+
+}
 }
 
 
