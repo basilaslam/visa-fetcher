@@ -12,6 +12,14 @@ RUN apt-get update && \
     libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 \
     ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget libgbm1
 
+
+    # Install GraphicsMagick
+RUN apt-get install -y graphicsmagick
+
+# Install Ghostscript
+RUN apt-get install -y ghostscript
+
+
 # Copy the Times New Roman font file to the fonts directory in the Docker image
 COPY fonts/times.ttf /usr/share/fonts/
 
