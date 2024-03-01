@@ -8,12 +8,14 @@ config();
 
 
 async function automate(visaId, applicationNo) {
-  const browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-  });
+  // const browser = await puppeteer.launch({
+  //   args: chromium.args,
+  //   defaultViewport: chromium.defaultViewport,
+  //   executablePath: await chromium.executablePath(),
+  //   headless: chromium.headless,
+  // });
+
+  const browser = await puppeteer.launch()
  try {
   console.log('step-1');
   await updateVisa(browser, visaId, applicationNo)
