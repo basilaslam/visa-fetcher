@@ -11,7 +11,7 @@ config();
 
 /**
  * Logs in to the given page using the provided credentials and captcha.
- * @param page The page to log in to.
+ * @param { Page } page The page to log in to.
  * @returns A Promise that resolves when the login is successful, or rejects with an error if it fails.
  */
 const login = async (page, fileName, tmpFilePath, retries = 3) => {
@@ -36,6 +36,9 @@ const login = async (page, fileName, tmpFilePath, retries = 3) => {
     while (retries > 0) {
         try {
             console.log(userId, password, 'cred');
+            if(!page.url().includes('login')){
+              return
+            }
             const userNameInput = await page.waitForSelector("input[type=email]");
             const passwordInput = await page.waitForSelector("input[type=password]");
             // Clear input fields before typing
@@ -59,14 +62,14 @@ const login = async (page, fileName, tmpFilePath, retries = 3) => {
             console.log("Login successful");
             return;
         } catch (error) {
-          if(retries <= 0){
+          if(retries < 1){
             return new Error('retries expired')
           }
           console.log(`Login failed. Retries left: ${retries}`);
           console.log('eoor from 2');
           retries--;
+          await page.reload()
           await login(page, fileName, tmpFilePath);  // Decrement retries when making a recursive call
-
         }
     }
     throw new Error("Maximum retries exceeded");
@@ -151,25 +154,30 @@ const getVisa = async (browser, page, visaId, pdfOutPath) => {
 
 async function convertPdfToTiffAndSave(pdf, pdfOutPath) {
 
-  const fileName = path.basename(pdfOutPath);
-  const options = {
-    density: 600,
-    saveFilename: fileName,
-    savePath: "./tmp",
-    format: "jpeg",
-    width: 2480,
-    height: 3508,
-  };
-  const convert = fromBase64(pdf, options);  
-  const pageToConvertAsImage = 1 
-  let fileData = await convert(pageToConvertAsImage, { responseType: "image" })
-   
-   console.log('insurance saved succesfully', '  ', fileData.name);
+  try {
+    const fileName = path.basename(pdfOutPath);
+    const options = {
+      density: 600,
+      saveFilename: fileName,
+      savePath: "./tmp",
+      format: "jpeg",
+      width: 2480,
+      height: 3508,
+    };
+    const convert = fromBase64(pdf, options);  
+    const pageToConvertAsImage = 1 
+    let fileData = await convert(pageToConvertAsImage, { responseType: "image" })
+     
+     console.log('insurance saved succesfully', '  ', fileData.name);
+  } catch (error) {
+    console.log(error, 'is this it');
+  }
 }
 
 
 const getInsurance = async (page, visaId, pdfOutPath, browser) => {    
    try {
+     console.log('test-1');
     const client = await page.createCDPSession();
 
     await client.send('Fetch.enable', {
@@ -203,8 +211,9 @@ const getInsurance = async (page, visaId, pdfOutPath, browser) => {
         const responseObj = await client.send('Fetch.getResponseBody', {
           requestId,
         });
-  
+        console.log('converting');
         await convertPdfToTiffAndSave(responseObj.body, pdfOutPath)
+        console.log('converted');
   
         await client.send('Fetch.fulfillRequest', {
           requestId,
@@ -323,6 +332,51 @@ export const updateVisa = async (browser, visaId, applicationNo) => {
   removeFile(`${insurancePdfOutPath}.1.jpeg`);
   console.log('Removed temporary PDF files.');
   console.log('updateVisa process completed.');
+  return {
+    status: "done"
+  };
+};
+export const updateInsurance = async (browser, visaId, applicationNo) => {
+  console.log('Starting updateVisa process...');
+  const url = `https://princessbooking.com/?_=403&s=vs.voucher&id=${visaId}`;
+  /**
+ * @type {Page}
+ */
+  const page = await browser.newPage();
+  console.log('Navigating to visa page...');
+  await page.goto(url);
+
+  const fileName = `${randomUUID()}--captcha.png`;
+  const tmpFilePath = path.join('./tmp', fileName);
+  const insurancePdfFileName = `${randomUUID()}--insurance`;
+  const insurancePdfOutPath = path.join('./tmp', insurancePdfFileName);
+
+  console.log('Logging in to the server...');
+  const accessToken = await loginToServer();
+  
+  
+  await login(page, fileName, tmpFilePath);
+  
+  console.log('Logging in to Princess...');
+  while(page.url().includes('login')){
+    await login(page, fileName, tmpFilePath);
+  }
+  console.log('Login successful.');
+
+  removeFile(tmpFilePath);
+  console.log('Removed temporary captcha file.');
+
+  console.log('Fetching insurance details...');
+  await getInsurance(page, visaId, insurancePdfOutPath, browser);
+  console.log('Insurance details fetched and saved as PDF.');
+
+  console.log('Sending insurance documents to server...');
+  const insuranceRes = await sendInsurance(`${insurancePdfOutPath}.1.jpeg`, applicationNo, accessToken);
+  console.log('Insurance documents sent successfully.');
+
+  removeFile(`${insurancePdfOutPath}.1.jpeg`);
+  console.log('Removed temporary PDF files.');
+  console.log('updateInsurance process completed.');
   return {
     status: "done"
   };
