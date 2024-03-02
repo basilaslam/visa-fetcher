@@ -53,7 +53,10 @@ const app = new Hono()
 
 
 app.post('/', async (c) =>{
-  console.log(await chromium.executablePath());
+
+  const now = new Date();
+const formattedDateTime = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+console.log("Current date and time:", formattedDateTime);
     const { visaId, applicationNo } = await c.req.json()
     
 await automate(visaId, applicationNo)
