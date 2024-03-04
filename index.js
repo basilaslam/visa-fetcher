@@ -1,4 +1,4 @@
-import puppeteer from "puppeteer-core"
+import puppeteer from "puppeteer"
 import { updateVisa } from "./update.js";
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
@@ -8,12 +8,14 @@ config();
 
 
 async function automate(visaId, applicationNo) {
-  const browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-  });
+  // const browser = await puppeteer.launch({
+  //   args: chromium.args,
+  //   defaultViewport: chromium.defaultViewport,
+  //   executablePath: await chromium.executablePath(),
+  //   headless: chromium.headless,
+  // });
+
+  const browser = await puppeteer.launch()
  try {
   console.log('step-1');
   await updateVisa(browser, visaId, applicationNo)
@@ -22,8 +24,27 @@ async function automate(visaId, applicationNo) {
 
  } catch (error) {
   await browser.close()
+  throw new Error('failed')
+}
+}
+async function automateInsurance(visaId, applicationNo) {
+  // const browser = await puppeteer.launch({
+  //   args: chromium.args,
+  //   defaultViewport: chromium.defaultViewport,
+  //   executablePath: await chromium.executablePath(),
+  //   headless: chromium.headless,
+  // });
+
+  const browser = await puppeteer.launch()
+ try {
+  console.log('step-1');
+  await updateVisa(browser, visaId, applicationNo)
+  await browser.close()
   console.log('Browser closed.');
 
+ } catch (error) {
+  await browser.close()
+  throw new Error('failed')
 }
 }
 
@@ -62,6 +83,22 @@ console.log("Current date and time:", formattedDateTime);
     const { visaId, applicationNo } = await c.req.json()
     
 await automate(visaId, applicationNo)
+  return c.json({
+    data: {visaId, applicationNo},
+    status: 'done'
+  })
+
+})
+app.post('/insurance', async (c) =>{
+
+  const now = new Date();
+const formattedDateTime = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+console.log("Current date and time:", formattedDateTime);
+
+  console.log(new Date())
+    const { visaId, applicationNo } = await c.req.json()
+    
+await automateInsurance(visaId, applicationNo)
   return c.json({
     data: {visaId, applicationNo},
     status: 'done'

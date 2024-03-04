@@ -7,7 +7,6 @@
   "dependencies": {
     "@hono/node-server": "^1.8.1",
     "@sparticuz/chromium": "^122.0.0",
-    "@sparticuz/chromium": "^122.0.0",
     "axios": "^1.6.7",
     "dotenv": "^16.4.5",
     "form-data": "^4.0.0",
