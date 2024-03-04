@@ -1,16 +1,19 @@
 {
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node --watch ./ index.js"
   },
   "dependencies": {
     "@hono/node-server": "^1.8.1",
+    "@sparticuz/chromium": "^122.0.0",
     "@sparticuz/chromium": "^122.0.0",
     "axios": "^1.6.7",
     "dotenv": "^16.4.5",
     "form-data": "^4.0.0",
     "hono": "^4.0.5",
-    "pdf2pic": "^3.1.1"
+    "pdf2pic": "^3.1.1",
+    "puppeteer-core": "^22.2.0"
   },
   "name": "save-visa",
   "version": "1.0.0",

@@ -1,4 +1,4 @@
-import puppeteer, { Browser, Page } from "puppeteer"
+import puppeteer from "puppeteer-core"
 import { updateVisa } from "./update.js";
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
@@ -8,7 +8,12 @@ config();
 
 
 async function automate(visaId, applicationNo) {
-  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  });
  try {
   console.log('step-1');
   await updateVisa(browser, visaId, applicationNo)
@@ -48,6 +53,10 @@ const app = new Hono()
 
 
 app.post('/', async (c) =>{
+
+  const now = new Date();
+const formattedDateTime = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+console.log("Current date and time:", formattedDateTime);
 
   console.log(new Date())
     const { visaId, applicationNo } = await c.req.json()
