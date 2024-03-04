@@ -283,6 +283,50 @@ const sendInsurance = async(filePath, applicationNo, accessToken) => {
     }
 }
 
+/**
+ * 
+ * @param {Page} page 
+ * @param {String} passportNumber 
+ * @returns 
+ */
+const checkStatus = async (page, passportNumber) => {
+  const url = `https://princessbooking.com/?_=203&s=vs.search&_p_st=1&l_st=0&l_d=0&l_d_s=&l_d_e=&id=&ii=&pi=&up=&dr_tp=&dr_op=&fn=&ln=&pn=${passportNumber}&gn=&nt_tt=&nt=&gp=&l_fv=&rr=&st=&st_x=&ss=&ax_dr=&dr_s=&dr_e=&dr_rf=&l_sr=0&l_ln=0`;
+  
+  console.log('step - 4 ');
+  await page.goto(url);
+  //    await login(page, 10)  
+  const tableRow = await page.evaluate(() => {
+      var _a;
+      if (document.querySelectorAll('tbody#RS')[0]) {
+          const rows = (_a = document.querySelectorAll('tbody#RS')[0]) === null || _a === void 0 ? void 0 : _a.childNodes;
+          console.log(rows);
+          console.log('step - 5 ');
+          if (rows[0].childNodes) {
+              const status = rows[0].childNodes[6];
+              return status.innerText;
+          }
+      }
+  });
+  console.log('step - 6');
+  if (tableRow) {
+      const status = tableRow.split(' • ')[1];
+      if (status === 'Approved') {
+          const visaId = await page.evaluate(() => {
+              var _a;
+              if (document.querySelectorAll('#RS > tr > td:nth-child(2) > b')) {
+                  console.log('#RS > tr > td:nth-child(2) > b');
+                  const data = (_a = document.querySelector('#RS > tr > td:nth-child(2) > b')) === null || _a === void 0 ? void 0 : _a.textContent;
+                  return data;
+              }
+          });
+          return {
+              status,
+              visaId
+          };
+      }
+  }
+}
+
 export const updateVisa = async (browser, visaId, applicationNo) => {
   console.log('Starting updateVisa process...');
   const url = `https://princessbooking.com/?_=403&s=vs.voucher&id=${visaId}`;
@@ -336,16 +380,23 @@ export const updateVisa = async (browser, visaId, applicationNo) => {
     status: "done"
   };
 };
-export const updateInsurance = async (browser, visaId, applicationNo) => {
-  console.log('Starting updateVisa process...');
-  const url = `https://princessbooking.com/?_=403&s=vs.voucher&id=${visaId}`;
+
+
+
+
+
+export const updateInsurance = async (browser, passportNo, applicationNo) => {
+  try {
+    console.log('Starting updateVisa process...');
+  const url = `https://princessbooking.com/?_=403&s=vs.voucher&id=`;
+  console.log(url);
   /**
  * @type {Page}
  */
+console.log(url);
   const page = await browser.newPage();
   console.log('Navigating to visa page...');
   await page.goto(url);
-
   const fileName = `${randomUUID()}--captcha.png`;
   const tmpFilePath = path.join('./tmp', fileName);
   const insurancePdfFileName = `${randomUUID()}--insurance`;
@@ -354,8 +405,7 @@ export const updateInsurance = async (browser, visaId, applicationNo) => {
   console.log('Logging in to the server...');
   const accessToken = await loginToServer();
   
-  
-  await login(page, fileName, tmpFilePath);
+  await login(page, fileName, tmpFilePath); 
   
   console.log('Logging in to Princess...');
   while(page.url().includes('login')){
@@ -366,6 +416,7 @@ export const updateInsurance = async (browser, visaId, applicationNo) => {
   removeFile(tmpFilePath);
   console.log('Removed temporary captcha file.');
 
+  const { visaId } =  await checkStatus(page, passportNo)
   console.log('Fetching insurance details...');
   await getInsurance(page, visaId, insurancePdfOutPath, browser);
   console.log('Insurance details fetched and saved as PDF.');
@@ -379,6 +430,10 @@ export const updateInsurance = async (browser, visaId, applicationNo) => {
   console.log('updateInsurance process completed.');
   return {
     status: "done"
+  }
+  } catch (error) {
+    console.log(error);
+   return new Error('Error') 
   };
 };
 
